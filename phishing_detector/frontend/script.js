@@ -1,6 +1,7 @@
 async function checkURL() {
   const url = document.getElementById("urlInput").value.trim();
   const resultDiv = document.getElementById("result");
+  const historyBody = document.getElementById("historyBody");
 
   if (!url) {
     resultDiv.style.display = "block";
@@ -8,6 +9,11 @@ async function checkURL() {
     resultDiv.className = "result malicious";
     return;
   }
+
+  // Loading state
+  resultDiv.style.display = "block";
+  resultDiv.textContent = "⏳ Checking...";
+  resultDiv.className = "result";
 
   try {
     const response = await fetch("http://127.0.0.1:5000/predict", {
@@ -18,12 +24,18 @@ async function checkURL() {
 
     const data = await response.json();
 
+    let row = document.createElement("tr");
+    row.innerHTML = `
+      <td>${url}</td>
+      <td class="${data.prediction}">${data.prediction.toUpperCase()}</td>
+      <td>${data.confidence}%</td>
+    `;
+    historyBody.prepend(row); // latest on top
+
     if (data.prediction === "malicious") {
-      resultDiv.style.display = "block";
-      resultDiv.textContent = `⚠️ Malicious URL detected! (Confidence: ${data.confidence}%)`;
+      resultDiv.textContent = `🚨 Malicious URL detected! (Confidence: ${data.confidence}%)`;
       resultDiv.className = "result malicious";
     } else {
-      resultDiv.style.display = "block";
       resultDiv.textContent = `✅ Safe URL (Confidence: ${data.confidence}%)`;
       resultDiv.className = "result safe";
     }
